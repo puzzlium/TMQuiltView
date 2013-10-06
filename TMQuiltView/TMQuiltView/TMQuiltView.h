@@ -95,6 +95,10 @@ typedef enum {
 // Returns the number of cells in the specified column
 - (NSInteger)numberOfCellsInColumn:(NSInteger)column;
 
+// Checks if the number of columns has changed by the delegate and if so
+// reloads the data.
+- (void)reloadDataIfNumberOfColumnsHasChanged;
+
 @end
 
 #import "TMQuiltViewCell.h"

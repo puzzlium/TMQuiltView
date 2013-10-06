@@ -31,7 +31,7 @@ NSString *const kDefaultReusableIdentifier = @"kTMQuiltViewDefaultReusableIdenti
 @property (nonatomic, readonly, retain) NSMutableSet *indexPaths;
 @property (nonatomic, readonly, retain) NSMutableDictionary *reusableViewsDictionary;
 
-@property (nonatomic, assign) NSInteger numberOfColumms;
+@property (nonatomic, assign) NSInteger numberOfColumns;
 
 @property (nonatomic, readonly) NSMutableArray **indexPathsByColumn;
 @property (nonatomic, readonly) NSMutableArray **cellTopByColumn;
@@ -60,7 +60,7 @@ NSString *const kDefaultReusableIdentifier = @"kTMQuiltViewDefaultReusableIdenti
 @synthesize indexPaths = _indexPaths;
 @synthesize reusableViewsDictionary = _reusableViewsDictionary;
 
-@synthesize numberOfColumms = _numberOfColumms;
+@synthesize numberOfColumns = _numberOfColumns;
 
 @synthesize indexPathsByColumn = _indexPathsByColumn;
 @synthesize cellTopByColumn = _cellTopByColumn;
@@ -91,7 +91,7 @@ NSString *const kDefaultReusableIdentifier = @"kTMQuiltViewDefaultReusableIdenti
 
 - (void)cleanupColumns {
     [self recycleViews];
-    for (int i = 0; i < _numberOfColumms; i++) {
+    for (int i = 0; i < _numberOfColumns; i++) {
         [self.indexPathsByColumn[i] release], self.indexPathsByColumn[i] = nil;
         [self.cellTopByColumn[i] release], self.cellTopByColumn[i] = nil;
         [self.indexPathToViewByColumn[i] release], self.indexPathToViewByColumn[i] = nil;
@@ -105,7 +105,7 @@ NSString *const kDefaultReusableIdentifier = @"kTMQuiltViewDefaultReusableIdenti
 }
 
 - (void)recycleViews {
-    for (int i = 0; i < _numberOfColumms; i++) {
+    for (int i = 0; i < _numberOfColumns; i++) {
         self.topByColumn[i] = -1;
         self.bottomByColumn[i] = -1;
         for (NSIndexPath *indexPath in [self.indexPathToViewByColumn[i] allKeys]) { 
@@ -125,7 +125,7 @@ NSString *const kDefaultReusableIdentifier = @"kTMQuiltViewDefaultReusableIdenti
     if (self) {
         super.alwaysBounceVertical = YES;
         [self addGestureRecognizer:self.tapGestureRecognizer];
-        _numberOfColumms = kTMQuiltViewDefaultColumns;
+        _numberOfColumns = kTMQuiltViewDefaultColumns;
     }
     return self;
 }
@@ -164,8 +164,8 @@ NSString *const kDefaultReusableIdentifier = @"kTMQuiltViewDefaultReusableIdenti
 
 - (NSMutableArray **)indexPathsByColumn {
     if (!_indexPathsByColumn) {
-        _indexPathsByColumn = malloc(sizeof(NSMutableArray*) * _numberOfColumms);
-        for (int i = 0; i < _numberOfColumms; i++) {
+        _indexPathsByColumn = malloc(sizeof(NSMutableArray*) * _numberOfColumns);
+        for (int i = 0; i < _numberOfColumns; i++) {
             _indexPathsByColumn[i] = [[NSMutableArray alloc] init];
         }
     }
@@ -174,8 +174,8 @@ NSString *const kDefaultReusableIdentifier = @"kTMQuiltViewDefaultReusableIdenti
 
 - (NSMutableArray **)cellTopByColumn {
     if (!_cellTopByColumn) {
-        _cellTopByColumn = malloc(sizeof(NSMutableArray*) * _numberOfColumms);
-        for (int i = 0; i < _numberOfColumms; i++) {
+        _cellTopByColumn = malloc(sizeof(NSMutableArray*) * _numberOfColumns);
+        for (int i = 0; i < _numberOfColumns; i++) {
             _cellTopByColumn[i] = [[NSMutableArray alloc] init];
         }
     }
@@ -184,8 +184,8 @@ NSString *const kDefaultReusableIdentifier = @"kTMQuiltViewDefaultReusableIdenti
 
 - (NSMutableDictionary **)indexPathToViewByColumn {
     if (!_indexPathToViewByColumn) {
-        _indexPathToViewByColumn = malloc(sizeof(NSMutableSet*) * _numberOfColumms);
-        for (int i = 0; i < _numberOfColumms; i++) {
+        _indexPathToViewByColumn = malloc(sizeof(NSMutableSet*) * _numberOfColumns);
+        for (int i = 0; i < _numberOfColumns; i++) {
             _indexPathToViewByColumn[i] = [[NSMutableDictionary alloc] init];
         }
     }
@@ -194,14 +194,14 @@ NSString *const kDefaultReusableIdentifier = @"kTMQuiltViewDefaultReusableIdenti
 
 - (int *)topByColumn {
     if (!_topByColumn) {
-        _topByColumn = malloc(sizeof(int) * _numberOfColumms);
+        _topByColumn = malloc(sizeof(int) * _numberOfColumns);
     }
     return _topByColumn;
 }
 
 - (int *)bottomByColumn {
     if (!_bottomByColumn) {
-        _bottomByColumn = malloc(sizeof(int) * _numberOfColumms);
+        _bottomByColumn = malloc(sizeof(int) * _numberOfColumns);
     }
     return _bottomByColumn;
 }
@@ -214,15 +214,22 @@ NSString *const kDefaultReusableIdentifier = @"kTMQuiltViewDefaultReusableIdenti
     return [self.indexPathsByColumn[column] count];
 }
 
-- (NSInteger)numberOfColumns {
-    NSInteger numberOfColumns = 0;
-    if ([self.delegate respondsToSelector:@selector(quiltViewNumberOfColumns:)]) {
-        numberOfColumns = [self.delegate quiltViewNumberOfColumns:self];
-    } else {
-        numberOfColumns = kTMQuiltViewDefaultColumns;
-    }
-    _numberOfColumms = numberOfColumns;
-    return numberOfColumns;
+- (NSUInteger)numberOfColumnsAccordingToDelegate{
+  if ([self.delegate respondsToSelector:@selector(quiltViewNumberOfColumns:)]) {
+    return [self.delegate quiltViewNumberOfColumns:self];
+  } else {
+    return kTMQuiltViewDefaultColumns;
+  }
+}
+
+- (void)updateNumberOfColumns{
+  _numberOfColumns = [self numberOfColumnsAccordingToDelegate];
+}
+
+- (void)reloadDataIfNumberOfColumnsHasChanged{
+  if (_numberOfColumns != [self numberOfColumnsAccordingToDelegate]) {
+    [self reloadData];
+  }
 }
 
 /**
@@ -235,7 +242,7 @@ NSString *const kDefaultReusableIdentifier = @"kTMQuiltViewDefaultReusableIdenti
     if (indexPath.row >= [self numberOfCells]) {
         return nil;
     }
-    for(int i = 0; i < _numberOfColumms; i++) {
+    for(int i = 0; i < _numberOfColumns; i++) {
         TMQuiltViewCell *cell = [self.indexPathToViewByColumn[i] objectForKey:indexPath];
         if (cell) {
             return cell;
@@ -296,9 +303,8 @@ NSString *const kDefaultReusableIdentifier = @"kTMQuiltViewDefaultReusableIdenti
 
 - (void)reloadData {
     [self cleanupColumns];
-    
-    _numberOfColumms = [self numberOfColumns];
-    
+    [self updateNumberOfColumns];
+  
     [self regenerateIndexPaths];
     [self resetView];
 }
@@ -313,12 +319,12 @@ NSString *const kDefaultReusableIdentifier = @"kTMQuiltViewDefaultReusableIdenti
     
     // -----
     
-    float heights[_numberOfColumms];
-    for (int i = 0; i < _numberOfColumms; i++) {
+    float heights[_numberOfColumns];
+    for (int i = 0; i < _numberOfColumns; i++) {
         heights[i] = 0.0;
     }
     
-    for (int i = 0; i < _numberOfColumms; i++) {
+    for (int i = 0; i < _numberOfColumns; i++) {
         [self.indexPathsByColumn[i] removeAllObjects];
         [self.cellTopByColumn[i] removeAllObjects];
     }
@@ -328,7 +334,7 @@ NSString *const kDefaultReusableIdentifier = @"kTMQuiltViewDefaultReusableIdenti
         int shortestColumn = 0;
         int shortestHeight = heights[0];
         
-        for (int i = 1; i < _numberOfColumms; i++) {
+        for (int i = 1; i < _numberOfColumns; i++) {
             if (heights[i] < shortestHeight) {
                 shortestColumn = i;
                 shortestHeight = heights[i];
@@ -346,7 +352,7 @@ NSString *const kDefaultReusableIdentifier = @"kTMQuiltViewDefaultReusableIdenti
     
     int tallestHeight = heights[0];
     
-    for (int i = 1; i < _numberOfColumms; i++) {
+    for (int i = 1; i < _numberOfColumns; i++) {
         if (heights[i] > tallestHeight) {
             tallestHeight = heights[i];
         }
@@ -381,9 +387,9 @@ NSString *const kDefaultReusableIdentifier = @"kTMQuiltViewDefaultReusableIdenti
 - (CGFloat)cellWidth {
     CGFloat cellWidth = (self.bounds.size.width 
                          - [self cellMargin:TMQuiltViewCellMarginLeft] 
-                         - [self cellMargin:TMQuiltViewCellMarginColumns] * (_numberOfColumms - 1) 
+                         - [self cellMargin:TMQuiltViewCellMarginColumns] * (_numberOfColumns - 1)
                          - [self cellMargin:TMQuiltViewCellMarginRight]
-                         ) / _numberOfColumms;
+                         ) / _numberOfColumns;
     return cellWidth;
 }
 
@@ -402,7 +408,7 @@ NSString *const kDefaultReusableIdentifier = @"kTMQuiltViewDefaultReusableIdenti
     
     self.contentSize = CGSizeMake(self.bounds.size.width, self.contentSize.height);
     
-    for (int i = 0; i < _numberOfColumms; i++) {
+    for (int i = 0; i < _numberOfColumns; i++) {
         NSArray *indexPaths = self.indexPathsByColumn[i];
         NSMutableDictionary *indexPathToView = self.indexPathToViewByColumn[i];
         int *top = &self.topByColumn[i];
@@ -563,7 +569,7 @@ NSString *const kDefaultReusableIdentifier = @"kTMQuiltViewDefaultReusableIdenti
     
     CGPoint tapPoint = [recognizer locationInView:self];        
     
-    for(int i = 0; i < _numberOfColumms; i++) {
+    for(int i = 0; i < _numberOfColumns; i++) {
         NSEnumerator *displayedViewEnumerator = [self.indexPathToViewByColumn[i] keyEnumerator];
         NSIndexPath *indexPath = nil;
         while((indexPath = (NSIndexPath *)[displayedViewEnumerator nextObject])) {
