@@ -351,6 +351,7 @@
 		15F3E23015B9DC6900218C9C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
 				DSTROOT = /tmp/TMQuiltView.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "TMQuiltView/TMQuiltView-Prefix.pch";
@@ -363,6 +364,7 @@
 		15F3E23115B9DC6900218C9C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
 				DSTROOT = /tmp/TMQuiltView.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "TMQuiltView/TMQuiltView-Prefix.pch";
